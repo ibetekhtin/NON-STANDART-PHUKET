@@ -86,28 +86,27 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://api.openai.com/v1/chat/completions",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=REPLACE_WITH_GEMINI_KEY",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "Authorization", "value": "Bearer REPLACE_WITH_OPENAI_KEY" },
             { "name": "Content-Type", "value": "application/json" }
           ]
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"model\": \"gpt-4o-mini\",\n  \"max_tokens\": 300,\n  \"temperature\": 0.75,\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": {{ JSON.stringify(\n        \"Ты КотЭ — дружелюбный помощник компании 'Нестандартный Отдых'.\\nПомогаешь туристам выбрать и забронировать экскурсии на Пхукете и в Паттайе.\\n\\nПАМЯТЬ О КЛИЕНТЕ:\\n\" + $json.client_memory +\n        \"\\n\\nИСТОРИЯ ПОСЛЕДНИХ СООБЩЕНИЙ:\\n\" + $json.last_conversations +\n        \"\\n\\nЗАДАЧА:\\n- Продолжай диалог как знакомый помощник\\n- Учитывай прошлые интересы — не спрашивай второй раз\\n- Предлагай конкретные туры с ценой\\n- Мягко веди к бронированию без давления\\n\\nСТИЛЬ: короткие сообщения (2-4 предложения), спокойный уважительный тон, иногда эмодзи 🌊🏝️⛵\\n\\nТУРЫ ПХУКЕТ: Джеймс Бонд 2500₽, Пхи-Пхи+Бамбу 3200₽, Симиланские 4500₽, МотоТур 2200₽, Рафтинг+Слоны+ATV 4200₽, Гиббон 3600₽, Као Сок 2дня 6500₽, Яхта 25000₽, VIP 12000₽/день, Фаер-шоу 1800₽\\nТУРЫ ПАТТАЙЯ: Ко Лан 2400₽, Закат на катамаране 3600₽, Тиффани 2500₽, Сафари Кхао Кхео 2800₽, Нонг Нуч 1800₽, Рамаяна 2200₽\\n\\nДЛЯ БРОНИ: https://nestandart-phuket.ru или @phuket_nestandart_bot\\nЗАПРЕЩЕНО: давление, срочность, манипуляции\"\n      ) }}\n    },\n    {\n      \"role\": \"user\",\n      \"content\": {{ JSON.stringify($json.message_text) }}\n    }\n  ]\n}",
+        "jsonBody": "={\n  \"systemInstruction\": {\n    \"parts\": [{ \"text\": {{ JSON.stringify(\n      \"Ты КотЭ — дружелюбный помощник компании 'Нестандартный Отдых'.\\nПомогаешь туристам выбрать и забронировать экскурсии на Пхукете и в Паттайе.\\n\\nПАМЯТЬ О КЛИЕНТЕ:\\n\" + $json.client_memory +\n      \"\\n\\nИСТОРИЯ ПОСЛЕДНИХ СООБЩЕНИЙ:\\n\" + $json.last_conversations +\n      \"\\n\\nЗАДАЧА:\\n- Продолжай диалог как знакомый помощник\\n- Учитывай прошлые интересы — не спрашивай второй раз\\n- Предлагай конкретные туры с ценой\\n- Мягко веди к бронированию без давления\\n\\nСТИЛЬ: короткие сообщения (2-4 предложения), спокойный уважительный тон, иногда эмодзи 🌊🏝️⛵\\n\\nТУРЫ ПХУКЕТ: Джеймс Бонд 2500₽, Пхи-Пхи+Бамбу 3200₽, Симиланские 4500₽, МотоТур 2200₽, Рафтинг+Слоны+ATV 4200₽, Гиббон 3600₽, Као Сок 2дня 6500₽, Яхта 25000₽, VIP 12000₽/день, Фаер-шоу 1800₽\\nТУРЫ ПАТТАЙЯ: Ко Лан 2400₽, Закат на катамаране 3600₽, Тиффани 2500₽, Сафари Кхао Кхео 2800₽, Нонг Нуч 1800₽, Рамаяна 2200₽\\n\\nДЛЯ БРОНИ: https://nestandart-phuket.ru или @phuket_nestandart_bot\\nЗАПРЕЩЕНО: давление, срочность, манипуляции\"\n    ) }}] }\n  },\n  \"contents\": [\n    {\n      \"role\": \"user\",\n      \"parts\": [{ \"text\": {{ JSON.stringify($json.message_text) }} }]\n    }\n  ],\n  \"generationConfig\": {\n    \"maxOutputTokens\": 300,\n    \"temperature\": 0.75\n  }\n}",
         "options": {}
       },
-      "id": "openai",
-      "name": "🤖 OpenAI GPT-4o",
+      "id": "gemini",
+      "name": "🤖 Gemini",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [1400, 400]
     },
     {
       "parameters": {
-        "jsCode": "const ai = $input.first().json;\nconst prev = $('✍️ Собрать промпт').first().json;\nconst reply = ai.choices?.[0]?.message?.content || 'Извините, не смог ответить. Попробуйте позже.';\nreturn [{ json: { ...prev, ai_reply: reply } }];"
+        "jsCode": "const ai = $input.first().json;\nconst prev = $('✍️ Собрать промпт').first().json;\nconst reply = ai.candidates?.[0]?.content?.parts?.[0]?.text || 'Извините, не смог ответить. Попробуйте позже.';\nreturn [{ json: { ...prev, ai_reply: reply } }];"
       },
       "id": "extract-reply",
       "name": "💬 Достать ответ",
@@ -246,9 +245,9 @@
       "main": [[{ "node": "✍️ Собрать промпт", "type": "main", "index": 0 }]]
     },
     "✍️ Собрать промпт": {
-      "main": [[{ "node": "🤖 OpenAI GPT-4o", "type": "main", "index": 0 }]]
+      "main": [[{ "node": "🤖 Gemini", "type": "main", "index": 0 }]]
     },
-    "🤖 OpenAI GPT-4o": {
+    "🤖 Gemini": {
       "main": [[{ "node": "💬 Достать ответ", "type": "main", "index": 0 }]]
     },
     "💬 Достать ответ": {
