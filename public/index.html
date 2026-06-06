@@ -1256,7 +1256,7 @@ function mapSBTour(t,i){
     priceChild:t.price_child||Math.round(pA*.7),unit:'₽',rating:'4.9',
     desc:t.description||'',chips:t.tags||[],image_url:t.image_url||'',
     included:t.included||[],notincl:t.not_included||[],bring:t.what_to_bring||[],
-    program:t.program||'',duration:t.duration||''};
+    program:t.program||'',duration:t.duration||'',minPeople:t.min_people||1,maxPeople:t.max_people||20};
 }
 async function loadToursFromSupabase(city){
   try{
@@ -1741,10 +1741,7 @@ function openTour(id){
 function renderSchedule(t){
   const wrap = $('dSchedule');
   if(!wrap) return;
-  const dbSched = (t.included&&t.included.length)||(t.notincl&&t.notincl.length)||t.program||t.duration ? {
-    duration:t.duration, includes:t.included||[], notincl:t.notincl||[], bring:t.bring||[], steps:null, program:t.program||''
-  } : null;
-  const s = (typeof SCHEDULES!=='undefined'&&SCHEDULES[t.id]) ? SCHEDULES[t.id] : dbSched;
+  const s = (typeof SCHEDULES!=='undefined') ? SCHEDULES[t.id] : null;
   if(!s){ wrap.innerHTML=''; return; }
   let html = '';
   // duration
@@ -1752,10 +1749,6 @@ function renderSchedule(t){
     html += `<div class="flex items-center gap-2 mb-5"><span class="ms text-[18px] text-acc">schedule</span><span class="text-[13px] text-text/90">${esc(s.duration)}</span></div>`;
   }
   // programme timeline
-  if(s.program && !s.steps){
-    html += `<p class="font-mono text-[10px] tracking-wider2 text-muted mb-3">→ ПРОГРАММА</p>`;
-    html += `<p class="text-[14px] text-text/85 leading-relaxed mb-7">${esc(s.program)}</p>`;
-  }
   if(s.steps && s.steps.length){
     html += `<p class="font-mono text-[10px] tracking-wider2 text-muted mb-3">→ ПРОГРАММА</p>`;
     html += `<div class="relative pl-6 space-y-4 mb-7">`;
@@ -2539,28 +2532,34 @@ async function syncCRM(type, data){
       fetch(`${SB_URL}/rest/v1/clients`,{
         method:'POST',
         headers:{...SB_HDR,'Prefer':'resolution=merge-duplicates,return=minimal'},
-        body:JSON.stringify({name:data.name||null,phone:data.phone||null,
+        body:JSON.stringify({
+          name:data.name||null,
+          phone:data.phone||null,
           email:data.email||null,
           telegram:data.telegram||null,
           tg_chat_id:(IN_TG&&tg.initDataUnsafe&&tg.initDataUnsafe.user)?String(tg.initDataUnsafe.user.id):null,
-          source:'app',status:'new'}),
+          source:'app',
+          status:'new'
+        }),
         keepalive:true
       }).catch(()=>{});
     } else if(type==='order'){
+      const tourObj = data.items&&data.items[0]&&data.items[0].id ? TOURS.find(t=>t.id===data.items[0].id) : null;
       fetch(`${SB_URL}/rest/v1/bookings`,{
         method:'POST',
         headers:{...SB_HDR,'Prefer':'return=minimal'},
         body:JSON.stringify({
-          tour_name: data.title||data.tourTitle||'',
+          tour_id: tourObj?.dbId||null,
+          tour_name: data.items&&data.items[0]?data.items[0].title:'',
           date_start: data.date||null,
           adults: data.adults||1,
           children: data.children||0,
           people_count: (data.adults||1)+(data.children||0),
-          total: data.total||data.amount||0,
+          total: data.price?data.price.total:(data.total||0),
           comment: [data.hotel?'Отель: '+data.hotel:'', data.comment||''].filter(Boolean).join(' · ')||null,
           source: 'app',
           status: 'new',
-          external_id: data.orderId||null
+          external_id: data.order_id||null
         }),
         keepalive:true
       }).catch(()=>{});
