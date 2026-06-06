@@ -1264,17 +1264,31 @@ async function loadToursFromSupabase(city){
     const res=await fetch(
       `${SB_URL}/rest/v1/tours?city=eq.${encodeURIComponent(lbl)}&active=eq.true&order=sort_order&select=*`,
       {headers:SB_HDR});
-    if(!res.ok)return;
+    if(!res.ok){ console.warn('[tours] Supabase HTTP',res.status); return; }
     const rows=await res.json();
     if(!Array.isArray(rows)||!rows.length)return;
-    SB_TOURS[city]=rows.map(mapSBTour);
+    // Сливаем БД поверх захардкоженного каталога: БД — источник истины
+    // по цене/фото/контенту, но туры, которых ещё нет в БД, не пропадают.
+    const fallback = city==='phuket'?PHUKET_TOURS:PATTAYA_TOURS;
+    const db = rows.map(mapSBTour);
+    const bySlug = {}; db.forEach(t=>{ bySlug[t.id]=t; });
+    const merged = fallback.map(f=>{
+      const d = bySlug[f.id];
+      if(!d) return f;                       // тура нет в БД — берём захардкоженный
+      return { ...f, ...d,                   // БД переопределяет, но не затирает пустым
+        desc:  d.desc || f.desc,
+        chips: (d.chips&&d.chips.length)? d.chips : f.chips,
+        image_url: d.image_url || f.image_url || '' };
+    });
+    db.forEach(t=>{ if(!fallback.some(f=>f.id===t.id)) merged.push(t); }); // новые туры из БД
+    SB_TOURS[city]=merged;
     if(CITY===city&&$('app').style.opacity==='1'){
       TOURS=SB_TOURS[city];
       renderHome();
       const srch=document.querySelector('[data-screen="search"].active');
       if(srch) renderSearch();
     }
-  }catch(e){}
+  }catch(e){ console.warn('[tours] load failed',e); }
 }
 
 function genImg(t){
@@ -2555,14 +2569,19 @@ async function syncCRM(type, data){
         if(rows&&rows[0]&&rows[0].id) PROFILE.client_id = rows[0].id;
       }
     } else if(type==='order'){
-      const tourObj = data.items&&data.items[0]&&data.items[0].id ? TOURS.find(t=>t.id===data.items[0].id) : null;
+      const items = Array.isArray(data.items)?data.items:[];
+      // tour_id ссылается на ОДИН тур — заполняем только если в заказе ровно один
+      const single = items.length===1 ? TOURS.find(t=>t.id===items[0].id) : null;
+      // имена всех туров заказа, чтобы ничего не терялось при мультибронировании
+      const tourNames = items.map(i=>i.title||(TOURS.find(t=>t.id===i.id)||{}).title)
+                             .filter(Boolean).join(' + ') || '';
       fetch(`${SB_URL}/rest/v1/bookings`,{
         method:'POST',
         headers:{...SB_HDR,'Prefer':'return=minimal'},
         body:JSON.stringify({
           client_id: PROFILE.client_id||null,
-          tour_id: tourObj?.dbId||null,
-          tour_name: data.items&&data.items[0]?data.items[0].title:'',
+          tour_id: single?.dbId||null,
+          tour_name: tourNames,
           date_start: data.date||null,
           adults: data.adults||1,
           children: data.children||0,
