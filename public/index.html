@@ -1239,7 +1239,7 @@ const PATTERNS = {
            остаются нетронутыми, оплата по ним недоступна).
    true  → возвращается ВСЁ: выбор города, меню, туры, оплата.
    ============================================================ */
-const PATTAYA_ENABLED = false;
+const PATTAYA_ENABLED = true;
 
 const ACC = { phuket:'#B8FF3C', pattaya:'#FF5C1F' };
 
@@ -2293,7 +2293,14 @@ function wireBookingInputs(){
 
 function validateBooking(){
   const errs = [];
-  if(!bookingState.date) errs.push('дату тура');   // дату спрашиваем на шаге брони
+  if(!bookingState.date){
+    errs.push('дату тура');
+  } else {
+    const chosen = new Date(bookingState.date);
+    const today = new Date(); today.setHours(0,0,0,0);
+    if(chosen < today) errs.push('дату (нельзя выбрать прошедшую)');
+  }
+  if((bookingState.adults||0) < 1) errs.push('количество взрослых');
   return errs;
 }
 
@@ -2529,9 +2536,9 @@ async function syncCRM(type, data){
   if(!data) return;
   try{
     if(type==='client'){
-      fetch(`${SB_URL}/rest/v1/clients`,{
+      const res = await fetch(`${SB_URL}/rest/v1/clients`,{
         method:'POST',
-        headers:{...SB_HDR,'Prefer':'resolution=merge-duplicates,return=minimal'},
+        headers:{...SB_HDR,'Prefer':'resolution=merge-duplicates,return=representation'},
         body:JSON.stringify({
           name:data.name||null,
           phone:data.phone||null,
@@ -2542,13 +2549,18 @@ async function syncCRM(type, data){
           status:'new'
         }),
         keepalive:true
-      }).catch(()=>{});
+      });
+      if(res.ok){
+        const rows = await res.json();
+        if(rows&&rows[0]&&rows[0].id) PROFILE.client_id = rows[0].id;
+      }
     } else if(type==='order'){
       const tourObj = data.items&&data.items[0]&&data.items[0].id ? TOURS.find(t=>t.id===data.items[0].id) : null;
       fetch(`${SB_URL}/rest/v1/bookings`,{
         method:'POST',
         headers:{...SB_HDR,'Prefer':'return=minimal'},
         body:JSON.stringify({
+          client_id: PROFILE.client_id||null,
           tour_id: tourObj?.dbId||null,
           tour_name: data.items&&data.items[0]?data.items[0].title:'',
           date_start: data.date||null,
