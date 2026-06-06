@@ -11,6 +11,7 @@
       "type": "n8n-nodes-base.telegramTrigger",
       "typeVersion": 1.1,
       "position": [200, 400],
+      "webhookId": "kote",
       "credentials": {
         "telegramApi": { "id": "REPLACE_ME", "name": "КотЭ Bot" }
       }
