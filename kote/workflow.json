@@ -13,7 +13,7 @@
       "position": [200, 400],
       "webhookId": "kote",
       "credentials": {
-        "telegramApi": { "id": "REPLACE_ME", "name": "КотЭ Bot" }
+        "telegramApi": { "id": "REPLACE_ME", "name": "Telegram account 2" }
       }
     },
     {
@@ -126,7 +126,7 @@
       "typeVersion": 1.2,
       "position": [1880, 400],
       "credentials": {
-        "telegramApi": { "id": "REPLACE_ME", "name": "КотЭ Bot" }
+        "telegramApi": { "id": "REPLACE_ME", "name": "Telegram account 2" }
       }
     },
     {
