@@ -1242,9 +1242,45 @@ const PATTERNS = {
 const PATTAYA_ENABLED = false;
 
 const ACC = { phuket:'#B8FF3C', pattaya:'#FF5C1F' };
+
+/* ---- Supabase ---- */
+const SB_URL='https://cmmdrhususjuadqzyssc.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtbWRyaHVzdXNqdWFkcXp5c3NjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0OTQxODcsImV4cCI6MjA5NjA3MDE4N30.IDExX_9wO21I8HIs_rJzDwMwAdD5xIBH5zHI043FEhs';
+const SB_HDR={'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'};
+let SB_TOURS={phuket:[],pattaya:[]};
+function mapSBTour(t,i){
+  const pA=t.price_adult||0;
+  const pStr=pA?pA.toLocaleString('ru-RU').replace(/,/g,' '):'по запросу';
+  return{n:String(t.sort_order||(i+1)).padStart(2,'0'),id:t.slug,dbId:t.id,title:t.title,
+    tag:(t.tags&&t.tags[0])||'',cat:t.category||'',price:pStr,priceAdult:pA,
+    priceChild:t.price_child||Math.round(pA*.7),unit:'₽',rating:'4.9',
+    desc:t.description||'',chips:t.tags||[],image_url:t.image_url||'',
+    included:t.included||[],notincl:t.not_included||[],bring:t.what_to_bring||[],
+    program:t.program||'',duration:t.duration||''};
+}
+async function loadToursFromSupabase(city){
+  try{
+    const lbl=city==='phuket'?'Пхукет':'Паттайя';
+    const res=await fetch(
+      `${SB_URL}/rest/v1/tours?city=eq.${encodeURIComponent(lbl)}&active=eq.true&order=sort_order&select=*`,
+      {headers:SB_HDR});
+    if(!res.ok)return;
+    const rows=await res.json();
+    if(!Array.isArray(rows)||!rows.length)return;
+    SB_TOURS[city]=rows.map(mapSBTour);
+    if(CITY===city&&$('app').style.opacity==='1'){
+      TOURS=SB_TOURS[city];
+      renderHome();
+      const srch=document.querySelector('[data-screen="search"].active');
+      if(srch) renderSearch();
+    }
+  }catch(e){}
+}
+
 function genImg(t){
   const cache = '_img_'+CITY;
   if(t[cache]) return t[cache];
+  if(t.image_url){ t[cache]=t.image_url; return t.image_url; }
   const acc = ACC[CITY];
   const pat = ((PATTERNS[t.cat] || PATTERNS['Сервисы'])()).replaceAll('__ACC__', acc);
   const gid='g'+t.n+CITY;
@@ -1449,7 +1485,8 @@ function choose(city){
   if(CITY===city && $('app').style.opacity==='1') return; // no-op if same city already open
   haptic('selection');
   CITY = city;
-  TOURS = city==='phuket' ? PHUKET_TOURS : PATTAYA_TOURS;
+  TOURS = SB_TOURS[city].length ? SB_TOURS[city] : (city==='phuket' ? PHUKET_TOURS : PATTAYA_TOURS);
+  loadToursFromSupabase(city);
   activeCat = null;
   // reset state when switching cities
   currentTour = null;
@@ -1704,7 +1741,10 @@ function openTour(id){
 function renderSchedule(t){
   const wrap = $('dSchedule');
   if(!wrap) return;
-  const s = (typeof SCHEDULES!=='undefined') ? SCHEDULES[t.id] : null;
+  const dbSched = (t.included&&t.included.length)||(t.notincl&&t.notincl.length)||t.program||t.duration ? {
+    duration:t.duration, includes:t.included||[], notincl:t.notincl||[], bring:t.bring||[], steps:null, program:t.program||''
+  } : null;
+  const s = (typeof SCHEDULES!=='undefined'&&SCHEDULES[t.id]) ? SCHEDULES[t.id] : dbSched;
   if(!s){ wrap.innerHTML=''; return; }
   let html = '';
   // duration
@@ -1712,6 +1752,10 @@ function renderSchedule(t){
     html += `<div class="flex items-center gap-2 mb-5"><span class="ms text-[18px] text-acc">schedule</span><span class="text-[13px] text-text/90">${esc(s.duration)}</span></div>`;
   }
   // programme timeline
+  if(s.program && !s.steps){
+    html += `<p class="font-mono text-[10px] tracking-wider2 text-muted mb-3">→ ПРОГРАММА</p>`;
+    html += `<p class="text-[14px] text-text/85 leading-relaxed mb-7">${esc(s.program)}</p>`;
+  }
   if(s.steps && s.steps.length){
     html += `<p class="font-mono text-[10px] tracking-wider2 text-muted mb-3">→ ПРОГРАММА</p>`;
     html += `<div class="relative pl-6 space-y-4 mb-7">`;
@@ -2488,20 +2532,39 @@ function payLater(){
    и сайт nestandart-phuket.ru — одна база на всех. Ключи Supabase в
    этом файле не храним. Включи CRM_CONFIG.enabled, когда бэкенд готов.
    ============================================================ */
-const CRM_CONFIG = {
-  enabled: false,
-  endpoint: '/api/crm',     // POST {type, source, ts, payload} → upsert в Supabase
-  source: 'app'             // метка источника: app | bot | site
-};
-function syncCRM(type, data){
-  if(!CRM_CONFIG.enabled || !CRM_CONFIG.endpoint || !data) return;
+async function syncCRM(type, data){
+  if(!data) return;
   try{
-    fetch(CRM_CONFIG.endpoint, {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ type, source: CRM_CONFIG.source, ts: Date.now(), payload: data }),
-      keepalive: true
-    }).catch(()=>{});
+    if(type==='client'){
+      fetch(`${SB_URL}/rest/v1/clients`,{
+        method:'POST',
+        headers:{...SB_HDR,'Prefer':'resolution=merge-duplicates,return=minimal'},
+        body:JSON.stringify({name:data.name||null,phone:data.phone||null,
+          email:data.email||null,
+          telegram:data.telegram||null,
+          tg_chat_id:(IN_TG&&tg.initDataUnsafe&&tg.initDataUnsafe.user)?String(tg.initDataUnsafe.user.id):null,
+          source:'app',status:'new'}),
+        keepalive:true
+      }).catch(()=>{});
+    } else if(type==='order'){
+      fetch(`${SB_URL}/rest/v1/bookings`,{
+        method:'POST',
+        headers:{...SB_HDR,'Prefer':'return=minimal'},
+        body:JSON.stringify({
+          tour_name: data.title||data.tourTitle||'',
+          date_start: data.date||null,
+          adults: data.adults||1,
+          children: data.children||0,
+          people_count: (data.adults||1)+(data.children||0),
+          total: data.total||data.amount||0,
+          comment: [data.hotel?'Отель: '+data.hotel:'', data.comment||''].filter(Boolean).join(' · ')||null,
+          source: 'app',
+          status: 'new',
+          external_id: data.orderId||null
+        }),
+        keepalive:true
+      }).catch(()=>{});
+    }
   }catch(e){}
 }
 
