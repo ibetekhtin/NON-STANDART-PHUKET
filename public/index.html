@@ -2737,7 +2737,7 @@ function finalizeOrder(paid){
   // what to bring (smart by categories of the booked tours)
   if($('successBring')){
     const cats = new Set(items.map(i=>(cartFindTour(i.id)||{}).cat).filter(Boolean));
-    const bring = new Set(['Паспорт / копия','Деньги на сувениры','Солнцезащитный крем']);
+    const bring = new Set(['Фотография паспорта','Деньги на сувениры','Солнцезащитный крем']);
     if([...cats].some(c=>/мор|остров|пляж|дайв|снорк/i.test(c))){
       bring.add('Купальник и полотенце'); bring.add('Сменная одежда');
     }
