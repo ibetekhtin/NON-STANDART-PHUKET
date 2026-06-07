@@ -414,6 +414,21 @@ tailwind.config = {
   /* 9. Active nav dot — animated underline that slides */
   .nb{ position:relative; }
 
+  /* 10. HACKER / MATRIX / NEON layer */
+  #matrix{ position:absolute; inset:0; z-index:0; pointer-events:none; opacity:.42; }
+  .splash-scan{
+    position:absolute; inset:0; z-index:1; pointer-events:none; opacity:.55;
+    background:repeating-linear-gradient(to bottom, transparent 0 2px, rgba(0,0,0,.20) 2px 4px);
+    mix-blend-mode:overlay;
+  }
+  /* neon glow uses currentColor so each element glows in its own accent */
+  .neon{ text-shadow:0 0 6px currentColor, 0 0 20px color-mix(in srgb, currentColor 45%, transparent); }
+  @keyframes neonPulse{
+    0%,100%{ text-shadow:0 0 5px currentColor, 0 0 15px color-mix(in srgb, currentColor 35%, transparent); }
+    50%{ text-shadow:0 0 11px currentColor, 0 0 30px color-mix(in srgb, currentColor 60%, transparent); }
+  }
+  .neon-pulse{ animation:neonPulse 2.6s ease-in-out infinite; }
+
   /* Kill ALL of the above for reduced-motion users */
   @media (prefers-reduced-motion: reduce){
     .grain{ display:none; }
@@ -424,6 +439,9 @@ tailwind.config = {
     .tilt{ transition:none; transform:none !important; }
     .cursor-glow{ display:none; }
     #sparks{ display:none; }
+    #matrix{ display:none; }
+    .splash-scan{ display:none; }
+    .neon-pulse{ animation:none; }
   }
 </style>
 </head>
@@ -438,9 +456,12 @@ tailwind.config = {
 <!-- ============================================================ -->
 <!-- SPLASH: PHUKET / PATTAYA CHOOSER                              -->
 <!-- ============================================================ -->
-<section id="splash" class="absolute inset-0 z-[80] bg-bg flex flex-col text-text transition-opacity duration-500 visible">
+<section id="splash" class="absolute inset-0 z-[80] bg-bg flex flex-col text-text transition-opacity duration-500 visible overflow-hidden">
+  <!-- hacker/matrix background + CRT scanlines -->
+  <canvas id="matrix" aria-hidden="true"></canvas>
+  <div class="splash-scan" aria-hidden="true"></div>
   <!-- top bar -->
-  <div class="flex items-center justify-between px-5 pt-5">
+  <div class="relative z-10 flex items-center justify-between px-5 pt-5">
     <div class="flex items-center gap-3">
       <div class="font-mono text-[10px] tracking-wider2 text-muted">НЕСТАНДАРТНЫЙ ОТДЫХ <span class="text-acc">®</span></div>
       <span class="font-mono text-[10px] tracking-wider2 text-muted border border-line rounded-full px-2 py-0.5">EST. 2013</span>
@@ -449,12 +470,12 @@ tailwind.config = {
   </div>
 
   <!-- center title -->
-  <div class="splash-stack flex-1 flex flex-col justify-center px-6">
+  <div class="splash-stack relative z-10 flex-1 flex flex-col justify-center px-6">
     <div class="font-mono text-[10px] tracking-wider2 text-muted mb-5 reveal" style="animation-delay:.05s">01 / НАЧАЛО</div>
     <h1 class="super super-xxl">
-      <button onclick="choose('phuket')" aria-label="Выбрать Пхукет" style="animation-delay:.15s" class="reveal splash-btn text-acc press cursor-pointer w-full">Пхукет</button>
+      <button onclick="choose('phuket')" aria-label="Выбрать Пхукет" style="animation-delay:.15s" class="reveal splash-btn text-acc neon neon-pulse press cursor-pointer w-full">Пхукет</button>
       <span id="splashOr" class="reveal block text-text/85 italic font-medium tracking-tightest" style="animation-delay:.25s;font-size:clamp(32px,7vw,52px)">или</span>
-      <button id="splashPattayaBtn" onclick="choose('pattaya')" aria-label="Выбрать Паттайя" style="animation-delay:.35s" class="reveal splash-btn text-orange press cursor-pointer w-full">Паттайя?</button>
+      <button id="splashPattayaBtn" onclick="choose('pattaya')" aria-label="Выбрать Паттайя" style="animation-delay:.35s" class="reveal splash-btn text-orange neon neon-pulse press cursor-pointer w-full">Паттайя?</button>
     </h1>
     <p id="splashSub" class="reveal font-mono text-[11px] tracking-wider2 text-muted mt-8 max-w-[80%]" style="animation-delay:.5s">
       → Выберите направление<br/>чтобы увидеть авторские туры и сервисы.
@@ -462,7 +483,7 @@ tailwind.config = {
   </div>
 
   <!-- bottom marquee -->
-  <div class="marquee-bar border-t border-line py-3 overflow-hidden">
+  <div class="marquee-bar relative z-10 border-t border-line py-3 overflow-hidden bg-bg/60 backdrop-blur">
     <div class="marquee font-mono text-[11px] tracking-wider2 text-muted whitespace-nowrap">
       <span><span class="text-acc">✦</span> АВТОРСКИЕ ТУРЫ <span class="text-acc">✦</span> ПХУКЕТ И ПАТТАЙЯ <span class="text-acc">✦</span> С 2013 ГОДА <span class="text-acc">✦</span> 2000+ ГОСТЕЙ <span class="text-acc">✦</span> 4.9★ <span class="text-acc">✦</span> 24/7 НА СВЯЗИ <span class="text-acc">✦</span> РУССКИЕ ГИДЫ <span class="text-acc">✦</span>&nbsp;</span>
       <span><span class="text-acc">✦</span> АВТОРСКИЕ ТУРЫ <span class="text-acc">✦</span> ПХУКЕТ И ПАТТАЙЯ <span class="text-acc">✦</span> С 2013 ГОДА <span class="text-acc">✦</span> 2000+ ГОСТЕЙ <span class="text-acc">✦</span> 4.9★ <span class="text-acc">✦</span> 24/7 НА СВЯЗИ <span class="text-acc">✦</span> РУССКИЕ ГИДЫ <span class="text-acc">✦</span>&nbsp;</span>
@@ -1513,6 +1534,7 @@ function choose(city){
   sp.classList.remove('visible');
   sp.style.opacity='0';
   sp.style.pointerEvents='none';
+  if(typeof FX!=='undefined') FX.matrixStop();  // stop matrix rain once a city is chosen
   // toggle data-city on shell — swaps CSS vars + all .text-acc colors smoothly
   $('shell').setAttribute('data-city', city);
   // update which city button shows active in drawer
@@ -1576,8 +1598,8 @@ function updateHomeCopy(){
   const isPhuket = CITY==='phuket';
   const slogan = $('heroSlogan');
   if(slogan) slogan.innerHTML = isPhuket
-    ? 'Ваш маршрут.<br/>Ваш темп.<br/><span class="text-acc">Ваш Тайланд.</span>'
-    : 'Залив Сиам.<br/>Город огней.<br/><span class="text-acc">Ваша Паттайя.</span>';
+    ? 'Ваш маршрут.<br/>Ваш темп.<br/><span class="text-acc neon">Ваш Тайланд.</span>'
+    : 'Залив Сиам.<br/>Город огней.<br/><span class="text-acc neon">Ваша Паттайя.</span>';
   const tagline = $('heroTagline');
   if(tagline) tagline.textContent = isPhuket
     ? 'Авторские туры по Пхукету. Острова, джунгли, мототуры, яхты, VIP — 18 направлений с русскоязычными гидами.'
@@ -3116,6 +3138,50 @@ const FX = {
     setTimeout(()=> el.classList.remove('glitch-in'), 600);
   },
 
+  /* Matrix rain — neon digital rain behind the splash chooser.
+     City-accent coloured, time-throttled, auto-stops when splash closes. */
+  matrix(){
+    const c = $('matrix');
+    if(!c || REDUCED) return;
+    const ctx = c.getContext('2d');
+    const chars = 'アイウエオカキクケコサシスセソタチツテトナニヌネノﾊﾋﾌﾍﾎ0123456789</>{}[]#$%*+=';
+    const FONT = 16;
+    let w, h, cols, drops;
+    const resize = ()=>{
+      w = c.width = c.offsetWidth || window.innerWidth;
+      h = c.height = c.offsetHeight || window.innerHeight;
+      cols = Math.max(1, Math.floor(w / FONT));
+      drops = Array(cols).fill(0).map(()=> Math.random() * -50);
+    };
+    resize();
+    window.addEventListener('resize', resize, { passive:true });
+    let last = 0;
+    const draw = (ts)=>{
+      if(!this._mxOn) return;
+      this._mxRaf = requestAnimationFrame(draw);
+      if(ts - last < 55) return;          // throttle ≈18fps for the classic fall speed
+      last = ts;
+      ctx.fillStyle = 'rgba(10,10,10,0.10)';  // fade trails
+      ctx.fillRect(0, 0, w, h);
+      const acc = ACC[CITY] || '#B8FF3C';
+      ctx.font = FONT + 'px ui-monospace, Menlo, monospace';
+      for(let i=0; i<cols; i++){
+        const ch = chars[(Math.random() * chars.length) | 0];
+        const x = i * FONT, y = drops[i] * FONT;
+        ctx.fillStyle = Math.random() > 0.97 ? '#FFFFFF' : acc;  // bright leading glyph
+        ctx.fillText(ch, x, y);
+        if(y > h && Math.random() > 0.975) drops[i] = 0;
+        drops[i]++;
+      }
+    };
+    this._mxOn = true;
+    this._mxRaf = requestAnimationFrame(draw);
+  },
+  matrixStop(){
+    this._mxOn = false;
+    if(this._mxRaf) cancelAnimationFrame(this._mxRaf);
+  },
+
   /* Sparks — celebratory particle burst (payment success) */
   sparksSetup(){
     this.canvas = $('sparks');
@@ -3195,6 +3261,7 @@ const FX = {
   // 4. luxe FX layer
   FX.initAll();
   FX.countUp();
+  FX.matrix();   // hacker/matrix rain behind the splash chooser
 
   // 5. wire booking form input listeners
   wireBookingInputs();
