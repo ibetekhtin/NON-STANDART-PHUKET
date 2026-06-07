@@ -978,7 +978,7 @@ tailwind.config = {
     <section data-screen="success" class="screen">
       <div class="pt-[80px] px-5 pb-32 min-h-full flex flex-col">
         <p id="successEyebrow" class="reveal font-mono text-[10px] tracking-wider2 text-acc">✓ / ОПЛАЧЕНО</p>
-        <h2 id="successHeadline" class="reveal super super-lg mt-2" style="animation-delay:.05s">Оплачено.<br/><span class="text-acc">Ждём вас</span><br/>в туре.</h2>
+        <h2 id="successHeadline" class="reveal super super-lg mt-2" style="animation-delay:.05s">Оплачено.<br/><span class="text-acc">Ждём Вас</span><br/>на экскурсии.</h2>
 
         <!-- RECEIPT -->
         <div class="reveal mt-7 border border-acc rounded-3xl p-5 bg-acc-10" style="animation-delay:.1s">
@@ -2752,7 +2752,7 @@ function finalizeOrder(paid){
 
   if(paid){
     $('successEyebrow').textContent = '✓ / ОПЛАЧЕНО';
-    $('successHeadline').innerHTML = 'Оплачено.<br/><span class="text-acc">Ждём вас</span><br/>в туре.';
+    $('successHeadline').innerHTML = 'Оплачено.<br/><span class="text-acc">Ждём Вас</span><br/>на экскурсии.';
     $('successDepositLabel').textContent = 'ОПЛАЧЕНО ПОЛНОСТЬЮ';
   } else {
     $('successEyebrow').textContent = '✓ / ЗАЯВКА ПРИНЯТА';
