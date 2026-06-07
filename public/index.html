@@ -561,7 +561,7 @@ tailwind.config = {
       <div class="pt-[60px]">
         <div class="px-5 pt-6 pb-4 flex items-center justify-between">
           <span class="font-mono text-[10px] tracking-wider2 text-muted">01 / ГЛАВНАЯ</span>
-          <span id="heroCityLabel" class="font-mono text-[10px] tracking-wider2 text-muted">(Пхукет) ©2026</span>
+          <span id="heroCityLabel" class="font-mono text-[10px] tracking-wider2 text-muted">©2026</span>
         </div>
 
         <div class="hero-frame relative h-[420px] mx-5 rounded-3xl overflow-hidden border border-line">
@@ -1593,7 +1593,7 @@ function updateHomeCopy(){
   $('aboutLabel').textContent = isPhuket ? 'услуг под ключ' : 'направлений';
   $('toursCount').innerHTML = `<span class="text-acc not-italic font-bold">${isPhuket?20:15}</span>`;
   const year = new Date().getFullYear();
-  $('heroCityLabel').textContent = isPhuket ? `(Пхукет) ©${year}` : `(Паттайя) ©${year}`;
+  $('heroCityLabel').textContent = `©${year}`;
   updateBrandTags();
 }
 
