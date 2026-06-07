@@ -1275,10 +1275,18 @@ async function loadToursFromSupabase(city){
     const merged = fallback.map(f=>{
       const d = bySlug[f.id];
       if(!d) return f;                       // тура нет в БД — берём захардкоженный
+      const dbHasPrice = d.priceAdult > 0;   // у услуг «по запросу» числовой цены в БД нет
+      const customUnit = f.unit && f.unit!=='₽'; // «₽/день» и т.п. — заданы вручную
       return { ...f, ...d,                   // БД переопределяет, но не затирает пустым
         desc:  d.desc || f.desc,
         chips: (d.chips&&d.chips.length)? d.chips : f.chips,
-        image_url: d.image_url || f.image_url || '' };
+        image_url: d.image_url || f.image_url || '',
+        // Цену и ед. изм. из БД берём только для обычных туров с числовой ценой.
+        // Услуги («Недвижимость» → консультация, аренда/VIP → ₽/день) сохраняют
+        // вручную выверенные подписи — иначе вышло бы «по запросу ₽» / «300 ₽».
+        price:      dbHasPrice ? d.price      : f.price,
+        unit:       dbHasPrice ? (customUnit ? f.unit : d.unit) : f.unit,
+        priceAdult: dbHasPrice ? d.priceAdult : (f.priceAdult||0) };
     });
     db.forEach(t=>{ if(!fallback.some(f=>f.id===t.id)) merged.push(t); }); // новые туры из БД
     SB_TOURS[city]=merged;
