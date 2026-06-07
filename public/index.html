@@ -415,17 +415,17 @@ tailwind.config = {
   .nb{ position:relative; }
 
   /* 10. HACKER / MATRIX / NEON layer */
-  #matrix{ position:absolute; inset:0; z-index:0; pointer-events:none; opacity:.42; }
+  #matrix{ position:absolute; inset:0; z-index:0; pointer-events:none; opacity:.75; }
   .splash-scan{
     position:absolute; inset:0; z-index:1; pointer-events:none; opacity:.55;
     background:repeating-linear-gradient(to bottom, transparent 0 2px, rgba(0,0,0,.20) 2px 4px);
     mix-blend-mode:overlay;
   }
   /* neon glow uses currentColor so each element glows in its own accent */
-  .neon{ text-shadow:0 0 6px currentColor, 0 0 20px color-mix(in srgb, currentColor 45%, transparent); }
+  .neon{ text-shadow:0 0 3px color-mix(in srgb, currentColor 55%, transparent), 0 0 9px color-mix(in srgb, currentColor 22%, transparent); }
   @keyframes neonPulse{
-    0%,100%{ text-shadow:0 0 5px currentColor, 0 0 15px color-mix(in srgb, currentColor 35%, transparent); }
-    50%{ text-shadow:0 0 11px currentColor, 0 0 30px color-mix(in srgb, currentColor 60%, transparent); }
+    0%,100%{ text-shadow:0 0 3px color-mix(in srgb, currentColor 45%, transparent), 0 0 8px color-mix(in srgb, currentColor 18%, transparent); }
+    50%{ text-shadow:0 0 5px color-mix(in srgb, currentColor 60%, transparent), 0 0 14px color-mix(in srgb, currentColor 32%, transparent); }
   }
   .neon-pulse{ animation:neonPulse 2.6s ease-in-out infinite; }
 
