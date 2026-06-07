@@ -461,6 +461,14 @@ tailwind.config = {
     </p>
   </div>
 
+  <!-- bottom marquee -->
+  <div class="marquee-bar border-t border-line py-3 overflow-hidden">
+    <div class="marquee font-mono text-[11px] tracking-wider2 text-muted whitespace-nowrap">
+      <span><span class="text-acc">✦</span> АВТОРСКИЕ ТУРЫ <span class="text-acc">✦</span> ПХУКЕТ И ПАТТАЙЯ <span class="text-acc">✦</span> С 2013 ГОДА <span class="text-acc">✦</span> 2000+ ГОСТЕЙ <span class="text-acc">✦</span> 4.9★ <span class="text-acc">✦</span> 24/7 НА СВЯЗИ <span class="text-acc">✦</span> РУССКИЕ ГИДЫ <span class="text-acc">✦</span>&nbsp;</span>
+      <span><span class="text-acc">✦</span> АВТОРСКИЕ ТУРЫ <span class="text-acc">✦</span> ПХУКЕТ И ПАТТАЙЯ <span class="text-acc">✦</span> С 2013 ГОДА <span class="text-acc">✦</span> 2000+ ГОСТЕЙ <span class="text-acc">✦</span> 4.9★ <span class="text-acc">✦</span> 24/7 НА СВЯЗИ <span class="text-acc">✦</span> РУССКИЕ ГИДЫ <span class="text-acc">✦</span>&nbsp;</span>
+    </div>
+  </div>
+
 </section>
 
 <!-- ============================================================ -->
@@ -579,6 +587,13 @@ tailwind.config = {
         <div class="reveal px-5 mt-5 flex gap-3" style="animation-delay:.26s">
           <button onclick="go('search')" class="press flex-1 h-12 bg-acc text-bg font-bold text-[13px] tracking-wide rounded-2xl flex items-center justify-center gap-2">ВЫБРАТЬ ТУР <span class="ms text-[18px]">arrow_forward</span></button>
           <button onclick="contactTg()" class="press h-12 px-5 border border-line text-text font-bold text-[13px] tracking-wide rounded-2xl flex items-center gap-2">⮡ TG</button>
+        </div>
+      </div>
+
+      <!-- marquee (city-aware — content set in render()) -->
+      <div class="mt-9 py-3 border-y border-line overflow-hidden">
+        <div class="marquee font-mono text-[11px] tracking-wider2 text-muted whitespace-nowrap" id="homeMarquee">
+          <span class="mq-seg"></span><span class="mq-seg"></span>
         </div>
       </div>
 
@@ -1572,6 +1587,15 @@ function updateHomeCopy(){
   $('toursCount').innerHTML = `<span class="text-acc not-italic font-bold">${isPhuket?18:15}</span>`;
   const year = new Date().getFullYear();
   $('heroCityLabel').textContent = `©${year}`;
+  // city-aware marquee — accent ✦ separators, count/city stay in sync automatically
+  const mq = document.querySelectorAll('#homeMarquee .mq-seg');
+  if(mq.length){
+    const star = '<span class="text-acc">✦</span>';
+    const cityName = isPhuket ? 'ПХУКЕТ' : 'ПАТТАЙЯ';
+    const cnt = isPhuket ? 18 : 15;
+    const seg = ` АВТОРСКИЕ МАРШРУТЫ ${star} ${cityName} ${star} С 2013 ГОДА ${star} 2000+ ГОСТЕЙ ${star} 24/7 НА СВЯЗИ ${star} ${cnt} ТУРОВ ${star}`;
+    mq.forEach(el=>{ el.innerHTML = seg + seg; });
+  }
   updateBrandTags();
 }
 
