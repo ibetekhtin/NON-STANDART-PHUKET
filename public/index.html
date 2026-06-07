@@ -1118,7 +1118,7 @@ tailwind.config = {
 
       <div id="drawerCitiesLabel" class="px-5 pt-6 pb-2 font-mono text-[10px] tracking-wider2 text-muted">→ ГОРОДА</div>
       <button id="drawerPhuketBtn" onclick="closeMenu();choose('phuket')" class="press w-full flex items-center justify-between px-5 py-3.5"><span class="text-[15px] font-semibold" style="color:#B8FF3C">⬤ Пхукет</span><span id="cityBadgePhuket" class="font-mono text-[10px]" style="color:#B8FF3C">АКТИВЕН</span></button>
-      <button id="drawerPattayaBtn" onclick="closeMenu();choose('pattaya')" class="press w-full flex items-center justify-between px-5 py-3.5"><span class="text-[15px] font-semibold" style="color:#FF5C1F">⬤ Паттайя</span><span id="cityBadgePattaya" class="font-mono text-[10px] text-muted">15 ТУРОВ</span></button>
+      <button id="drawerPattayaBtn" onclick="closeMenu();choose('pattaya')" class="press w-full flex items-center justify-between px-5 py-3.5"><span class="text-[15px] font-semibold" style="color:#FF5C1F">⬤ Паттайя</span><span id="cityBadgePattaya" class="font-mono text-[10px] text-muted"></span></button>
 
       <div class="px-5 pt-6 pb-2 font-mono text-[10px] tracking-wider2 text-muted">→ СВЯЗЬ</div>
       <button onclick="closeMenu();contactTg()" class="press w-full flex items-center justify-between px-5 py-3.5"><span class="text-[14px]">⮡ Telegram</span><span class="ms text-[18px] text-muted">arrow_outward</span></button>
@@ -1501,10 +1501,10 @@ function choose(city){
   // toggle data-city on shell — swaps CSS vars + all .text-acc colors smoothly
   $('shell').setAttribute('data-city', city);
   // update which city button shows active in drawer
-  $('cityBadgePhuket').textContent = city==='phuket' ? 'АКТИВЕН' : '18 ТУРОВ';
+  $('cityBadgePhuket').textContent = city==='phuket' ? 'АКТИВЕН' : '';
   $('cityBadgePhuket').className = 'font-mono text-[10px]';
   $('cityBadgePhuket').style.color = city==='phuket' ? '#B8FF3C' : '#7A7A7A';
-  $('cityBadgePattaya').textContent = city==='pattaya' ? 'АКТИВЕН' : '15 ТУРОВ';
+  $('cityBadgePattaya').textContent = city==='pattaya' ? 'АКТИВЕН' : '';
   $('cityBadgePattaya').className = 'font-mono text-[10px]';
   $('cityBadgePattaya').style.color = city==='pattaya' ? '#FF5C1F' : '#7A7A7A';
   // show app
